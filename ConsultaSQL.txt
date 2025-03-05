@@ -1,0 +1,4 @@
+int carta_elegida = =mysql_query(consulta,"SELECT id_carta FROM baraja WHERE accion = "Próxima pareja puntúa doble""); //seleccionamos la carta que cumple la acción que queremos aplicar
+
+
+UPDATE Baraja SET accion = "Puntúa doble" WHERE id_carata = carta_elegida; //Aplicamos la acción a la otra carta del tablero del mismo valor
