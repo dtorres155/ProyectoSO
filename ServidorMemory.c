@@ -6,17 +6,138 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#+include <pthread.h>
 //programa en C para consultar los datos de la base de datos
 //Incluir esta libreria para poder hacer las llamadas en shiva2.upc.es
 //#include <my_global.h>
 
+
+void *AtenderCliente (void *socket)
+{
+	int sock_conn;
+	int *s;
+	s= (int *) socket;
+	sock_conn= *s;
+	
+	//int socket_conn = * (int *) socket;
+	
+	char peticion[512];
+	char respuesta[512];
+	int ret;
+	
+		//sock_conn es el socket que usaremos para este cliente
+		MYSQL *conn;
+		int err;
+		// Estructura especial para almacenar resultados de consultas
+		MYSQL_RES *resultado;
+		MYSQL_ROW row;
+		char id_partida [100];
+		char consulta [80];
+		//Creamos una conexion al servidor MYSQL
+		conn = mysql_init(NULL);
+		if (conn==NULL) {
+			printf ("Error al crear la conexion: %u %s\n",
+					mysql_errno(conn), mysql_error(conn));
+			 pthread_exit(NULL);
+		}
+		//inicializar la conexion
+		conn = mysql_real_connect (conn, "localhost","root", "mysql", "memory",0, NULL, 0);
+		if (conn==NULL) {
+			printf ("Error al inicializar la conexion: %u %s\n",
+					mysql_errno(conn), mysql_error(conn));
+			 pthread_exit(NULL);
+		}
+	int terminar =0;
+	// Entramos en un bucle para atender todas las peticiones de este cliente
+	//hasta que se desconecte
+	while (terminar ==0)
+	{
+						
+		// Ahora recibimos la peticion
+		ret=read(sock_conn,peticion, sizeof(peticion));
+		printf ("Recibido\n");
+			
+		// Tenemos que a?adirle la marca de fin de string 
+		// para que no escriba lo que hay despues en el buffer
+		peticion[ret]='\0';
+			
+			
+		printf ("Peticion: %s\n",peticion);
+			
+		// vamos a ver que quieren
+		char *p = strtok( peticion, "/");
+		int codigo =  atoi (p);
+		// Ya tenemos el c?digo de la petici?n
+		char usuario[20];
+		char contrasena[50];
+		char consulta [80];
+		char nombre[20];
+			
+		if (codigo !=0)
+		{
+			p = strtok( NULL, "/");
+				
+			strcpy (usuario, p);
+				
+			// Ya tenemos el nombre
+			printf ("Codigo: %d, Usuario: %s\n", codigo, usuario);
+		}
+			
+		if (codigo ==0) //peticion de desconexion
+			terminar=1;
+		else if (codigo == 1) // Peticion de login
+		{
+			p = strtok( NULL, "/");
+				
+			strcpy (contrasena, p);
+			sprintf(respuesta,"%d",login(conn, usuario,contrasena));
+		}
+		else if (codigo == 2)
+		{
+			p = strtok( NULL, "/");
+				
+			strcpy (contrasena, p);
+			sprintf(respuesta,"%d",register_player(conn, usuario,contrasena));
+		}
+		else if (codigo == 3)
+		{
+			sprintf(respuesta,"%d",MejorTiempo(conn, usuario));
+		}else if (codigo == 4){
+			sprintf(respuesta,"%d",ConsultarNumJugadores(conn, usuario));
+		}else {
+			int edad;
+				
+			p = strtok( NULL, "/");
+			strcpy (nombre, p);
+			p = strtok( NULL, "/");
+			edad = atoi(p);
+				
+			sprintf(respuesta,"%d",ModificarPerfil(conn, usuario,nombre,edad));
+		}
+					 
+			
+			
+		if (codigo !=0)
+		{
+				
+			printf ("Respuesta: %s\n", respuesta);
+			// Enviamos respuesta
+			write (sock_conn,respuesta, strlen(respuesta));
+		}
+	}
+// Se acabo el servicio para este cliente
+    mysql_close(conn);
+    close(sock_conn);
+    pthread_exit(NULL);
+
+}
+
 int main(int argc, char *argv[])
 {
 	
-	int sock_conn, sock_listen, ret;
+	int sock_conn, sock_listen;
 	struct sockaddr_in serv_adr;
-	char peticion[512];
-	char respuesta[512];
+
 	// INICIALITZACIONS
 	// Obrim el socket
 	if ((sock_listen = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -69,87 +190,7 @@ int main(int argc, char *argv[])
 		
 		
 		
-		int terminar =0;
-		// Entramos en un bucle para atender todas las peticiones de este cliente
-		//hasta que se desconecte
-		while (terminar ==0)
-		{
-						
-			// Ahora recibimos la peticion
-			ret=read(sock_conn,peticion, sizeof(peticion));
-			printf ("Recibido\n");
-			
-			// Tenemos que a?adirle la marca de fin de string 
-			// para que no escriba lo que hay despues en el buffer
-			peticion[ret]='\0';
-			
-			
-			printf ("Peticion: %s\n",peticion);
-			
-			// vamos a ver que quieren
-			char *p = strtok( peticion, "/");
-			int codigo =  atoi (p);
-			// Ya tenemos el c?digo de la petici?n
-			char usuario[20];
-			char contrasena[50];
-			char consulta [80];
-			char nombre[20];
-			
-			if (codigo !=0)
-			{
-				p = strtok( NULL, "/");
-				
-				strcpy (usuario, p);
-				
-				// Ya tenemos el nombre
-				printf ("Codigo: %d, Usuario: %s\n", codigo, usuario);
-			}
-			
-			if (codigo ==0) //peticion de desconexion
-				terminar=1;
-			else if (codigo == 1) // Peticion de login
-			{
-				p = strtok( NULL, "/");
-				
-				strcpy (contrasena, p);
-				sprintf(respuesta,"%d",login(conn, usuario,contrasena));
-			}
-			else if (codigo == 2)
-			{
-				p = strtok( NULL, "/");
-				
-				strcpy (contrasena, p);
-				sprintf(respuesta,"%d",register_player(conn, usuario,contrasena));
-			}
-			else if (codigo == 3)
-			{
-				sprintf(respuesta,"%d",MejorTiempo(conn, usuario));
-			}else if (codigo == 4){
-				sprintf(respuesta,"%d",ConsultarNumJugadores(conn, usuario));
-			}else {
-				int edad;
-				
-				p = strtok( NULL, "/");
-				strcpy (nombre, p);
-				p = strtok( NULL, "/");
-				edad = atoi(p);
-				
-				sprintf(respuesta,"%d",ModificarPerfil(conn, usuario,nombre,edad));
-			}
-					 
-			
-			
-			if (codigo !=0)
-			{
-				
-				printf ("Respuesta: %s\n", respuesta);
-				// Enviamos respuesta
-				write (sock_conn,respuesta, strlen(respuesta));
-			}
-		}
-		
-
-		mysql_close(conn);
+				mysql_close(conn);
 		// Se acabo el servicio para este cliente
 		close(sock_conn); 
 	}
@@ -250,7 +291,7 @@ int login(MYSQL *conn, char *id, char *contr) {
 	
 	strcpy(consulta, "SELECT nombre FROM jugadores WHERE id_jugador = '");
 	strcat(consulta, id);
-	strcat(consulta, "' AND contraseña = '");
+	strcat(consulta, "' AND contraseÃ±a = '");
 	strcat(consulta, contr);
 	strcat(consulta, "'");
 	
@@ -303,7 +344,7 @@ int register_player(MYSQL *conn, char *nuevo_id,char *contr) {
 	mysql_free_result(resultado);
 	
 	// Insertar nuevo jugador
-	strcpy(consulta, "INSERT INTO jugadores (id_jugador, contraseña) VALUES ('");
+	strcpy(consulta, "INSERT INTO jugadores (id_jugador, contrasena) VALUES ('");
 	strcat(consulta, nuevo_id);
 	strcat(consulta, "', '");
 	strcat(consulta, contr);
