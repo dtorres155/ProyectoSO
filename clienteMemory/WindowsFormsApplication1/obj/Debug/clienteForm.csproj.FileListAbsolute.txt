@@ -151,3 +151,12 @@ C:\Users\Dabvid-\Desktop\UNI\SO\Memory\clienteMemory\WindowsFormsApplication1\ob
 C:\Users\Dabvid-\Desktop\UNI\SO\Memory\clienteMemory\WindowsFormsApplication1\obj\Debug\clienteForm.csproj.CoreCompileInputs.cache
 C:\Users\Dabvid-\Desktop\UNI\SO\Memory\clienteMemory\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.exe
 C:\Users\Dabvid-\Desktop\UNI\SO\Memory\clienteMemory\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.pdb
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.exe
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.pdb
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\obj\Debug\clienteForm.csproj.AssemblyReference.cache
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.Form1.resources
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.Properties.Resources.resources
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\obj\Debug\clienteForm.csproj.GenerateResource.cache
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\obj\Debug\clienteForm.csproj.CoreCompileInputs.cache
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.exe
+C:\Users\Dabvid-\Desktop\UNI\SO\Nueva carpeta\ProyectoSO-ConcurrenciaConSQL\clienteMemory\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.pdb

@@ -8,12 +8,16 @@ using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace WindowsFormsApplication1
 {
     public partial class Form1 : Form
     {
+        List<string> conectados = new List<string>();
         Socket server;
+        Thread atenderThread;
+        bool escuchando = true;
         public Form1()
         {
             InitializeComponent();
@@ -21,9 +25,76 @@ namespace WindowsFormsApplication1
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            void AtenderServidor()
+            {
+                while (escuchando)
+                {
+                    try
+                    {
+                        byte[] buffer = new byte[512];
+                        int bytesRecibidos = server.Receive(buffer);
 
-           
+                        // Si el servidor no envió datos, saltamos el bucle
+                        if (bytesRecibidos == 0)
+                        {
+                            Console.WriteLine("⚠ El servidor no envió datos (0 bytes recibidos).");
+                            continue;
+                        }
+
+                        string mensaje = Encoding.ASCII.GetString(buffer, 0, bytesRecibidos).Trim();
+
+                        // 🔹 Depuración: Mostrar mensaje recibido
+                        Console.WriteLine($"📩 Mensaje recibido: '{mensaje}' (Bytes: {bytesRecibidos})");
+
+                        // Si el mensaje sigue vacío, el servidor podría estar enviando una cadena vacía
+                        if (string.IsNullOrEmpty(mensaje))
+                        {
+                            Console.WriteLine("⚠ Advertencia: Mensaje recibido está vacío.");
+                            continue;
+                        }
+
+                        // Si el mensaje es sobre conectados ("6/"), actualizamos la lista
+                        string[] partes = mensaje.Split('/');
+                        if (partes[0] == "6")
+                        {
+                            ActualizarListaConectados(partes);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("❌ Error al recibir datos: " + ex.Message);
+                    }
+                } }
+
         }
+
+        
+
+        private void ActualizarListaConectados(string[] partes)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => ActualizarListaConectados(partes)));
+            }
+            else
+            {
+                conectados.Clear();
+
+                int numConectados = int.Parse(partes[1]);
+                for (int i = 2; i < 2 + numConectados; i++)
+                {
+                    conectados.Add(partes[i]);
+                }
+
+                // Actualizar DataGridView
+                conectadosGrid.RowCount = conectados.Count;
+                for (int i = 0; i < conectados.Count; i++)
+                {
+                    conectadosGrid.Rows[i].Cells[0].Value = conectados[i];
+                }
+            }
+        }
+
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -82,9 +153,14 @@ namespace WindowsFormsApplication1
 
             // Nos desconectamos
             this.BackColor = Color.Gray;
+            escuchando = false;
             server.Shutdown(SocketShutdown.Both);
             server.Close();
-
+            // Detener el hilo de escucha
+            if (atenderThread != null && atenderThread.IsAlive)
+            {
+                atenderThread.Abort();
+            }
 
         }
 
@@ -133,7 +209,7 @@ namespace WindowsFormsApplication1
             server.Receive(msg2);
             mensaje = Encoding.ASCII.GetString(msg2).Split('\0')[0];
             if (mensaje == "1")
-                MessageBox.Show("Error");
+                MessageBox.Show("Todavía no hay un tiempo registrado");
             else
                 MessageBox.Show(mensaje);
 
@@ -157,6 +233,45 @@ namespace WindowsFormsApplication1
                 MessageBox.Show("Se ha modificado correctamente");
             else
                 MessageBox.Show("No se ha podido modificar");
+        }
+
+        private void MostrarConectados_Click(object sender, EventArgs e)
+        {
+
+            string mensaje = "6/";
+            byte[] msg = Encoding.ASCII.GetBytes(mensaje);
+            server.Send(msg);
+
+            byte[] buffer = new byte[512]; // Asegurar tamaño suficiente
+            int bytesRecibidos = server.Receive(buffer);
+
+            mensaje = Encoding.ASCII.GetString(buffer, 0, bytesRecibidos);
+
+            // 🔹 Depuración
+            MessageBox.Show($"Mensaje recibido del servidor: '{mensaje}'");
+
+            if (string.IsNullOrEmpty(mensaje) || mensaje == "No hay jugadores conectados.")
+            {
+                MessageBox.Show("No hay jugadores conectados en este momento.");
+                return;
+            }
+
+            // Procesar lista de jugadores
+            string[] partes = mensaje.Split('/');
+            int numConectados = int.Parse(partes[0]);
+
+            conectados.Clear();
+            for (int i = 1; i <= numConectados; i++)
+            {
+                conectados.Add(partes[i]);
+            }
+
+            // Mostrar en DataGridView
+            conectadosGrid.RowCount = conectados.Count;
+            for (int i = 0; i < conectados.Count; i++)
+            {
+                conectadosGrid.Rows[i].Cells[0].Value = conectados[i];
+            }
         }
     }
 }

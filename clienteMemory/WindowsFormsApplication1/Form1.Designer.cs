@@ -47,7 +47,10 @@
             this.ModificarButton = new System.Windows.Forms.Button();
             this.edad = new System.Windows.Forms.TextBox();
             this.nombre = new System.Windows.Forms.TextBox();
+            this.MostrarConectados = new System.Windows.Forms.Button();
+            this.conectadosGrid = new System.Windows.Forms.DataGridView();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.conectadosGrid)).BeginInit();
             this.SuspendLayout();
             // 
             // label2
@@ -69,7 +72,7 @@
             this.connectButton.Name = "connectButton";
             this.connectButton.Size = new System.Drawing.Size(125, 32);
             this.connectButton.TabIndex = 4;
-            this.connectButton.Text = "Connect";
+            this.connectButton.Text = "Conectar";
             this.connectButton.UseVisualStyleBackColor = true;
             this.connectButton.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -156,7 +159,7 @@
             this.disconnectButton.Name = "disconnectButton";
             this.disconnectButton.Size = new System.Drawing.Size(125, 32);
             this.disconnectButton.TabIndex = 10;
-            this.disconnectButton.Text = "Disconnect";
+            this.disconnectButton.Text = "Desconectar";
             this.disconnectButton.UseVisualStyleBackColor = true;
             this.disconnectButton.Click += new System.EventHandler(this.button3_Click);
             // 
@@ -259,11 +262,36 @@
             this.nombre.TabIndex = 24;
             this.nombre.Text = "Nombre";
             // 
+            // MostrarConectados
+            // 
+            this.MostrarConectados.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.5F);
+            this.MostrarConectados.Location = new System.Drawing.Point(632, 615);
+            this.MostrarConectados.Margin = new System.Windows.Forms.Padding(4);
+            this.MostrarConectados.Name = "MostrarConectados";
+            this.MostrarConectados.Size = new System.Drawing.Size(206, 32);
+            this.MostrarConectados.TabIndex = 25;
+            this.MostrarConectados.Text = "Usuarios conectados";
+            this.MostrarConectados.UseVisualStyleBackColor = true;
+            this.MostrarConectados.Click += new System.EventHandler(this.MostrarConectados_Click);
+            // 
+            // conectadosGrid
+            // 
+            this.conectadosGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.conectadosGrid.Location = new System.Drawing.Point(632, 446);
+            this.conectadosGrid.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.conectadosGrid.Name = "conectadosGrid";
+            this.conectadosGrid.RowHeadersWidth = 62;
+            this.conectadosGrid.RowTemplate.Height = 28;
+            this.conectadosGrid.Size = new System.Drawing.Size(206, 142);
+            this.conectadosGrid.TabIndex = 26;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(988, 692);
+            this.Controls.Add(this.conectadosGrid);
+            this.Controls.Add(this.MostrarConectados);
             this.Controls.Add(this.nombre);
             this.Controls.Add(this.edad);
             this.Controls.Add(this.ModificarButton);
@@ -283,6 +311,7 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.conectadosGrid)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -309,6 +338,8 @@
         private System.Windows.Forms.Button ModificarButton;
         private System.Windows.Forms.TextBox edad;
         private System.Windows.Forms.TextBox nombre;
+        private System.Windows.Forms.Button MostrarConectados;
+        private System.Windows.Forms.DataGridView conectadosGrid;
     }
 }
 
