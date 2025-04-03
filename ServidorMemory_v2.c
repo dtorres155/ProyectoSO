@@ -11,9 +11,88 @@
 //Incluir esta libreria para poder hacer las llamadas en shiva2.upc.es
 //#include <my_global.h>
 
-#define PORT 9030
+#define PORT 9048
+#define MAX_PLAYERS 100
+
+typedef struct {
+    char nombre[20];
+    int socket;
+} Conectado;
+
+typedef struct {
+    Conectado conectados[MAX_PLAYERS];
+    int numConectados;
+} ListaConectados;
+
+ListaConectados *listaConectados;
+
+int PonerConectado(ListaConectados *listaConectados, char nombre[20], int socket) {
+    //pthread_mutex_lock(&mutexLista);
+    if (listaConectados->numConectados>= MAX_PLAYERS) {
+
+        return -1; // Lista llena
+    }
+	else{
+		strcpy(listaConectados->conectados[listaConectados->numConectados].nombre, nombre);
+		listaConectados->conectados[listaConectados->numConectados].socket = socket;
+		listaConectados->numConectados++;
+		printf("Jugadores conectados (%d): ", listaConectados->numConectados);
+		for (int i = 0; i < listaConectados->numConectados; i++) {
+			printf("%s ", listaConectados->conectados[i].nombre);
+		}
+		printf("\n");
+    return 0; // Jugador añadido correctamente
+	}
+}
+
+int DamePosicion(ListaConectados *lista, char nombre[20]){
+
+	//Devuelve popsicion o -1 sino esta en la lista
+	int i = 0; 
+	int encontrado = 0;
+	while((i < lista->numConectados) && !encontrado)
+	{
+		if(strcmp(lista->conectados[i].nombre,nombre)==0)
+			encontrado = 1;
+		if(!encontrado)
+			i = i+1;		   
+	}
+	if (encontrado)
+		return i;
+	else 
+		return-1;
+}
+
+void DameConec(ListaConectados *lista, char nombres[50]){
+	if (lista->numConectados == 0) {
+		strcpy(nombres, "No hay jugadores conectados.");
+		return;
+	}
+	
+	sprintf(nombres, "%d", lista->numConectados);
+	for (int i = 0; i < lista->numConectados; i++) {
+		strcat(nombres, "/");
+		strcat(nombres, lista->conectados[i].nombre);
+	}
+	
+	printf("Lista de conectados enviada: %s\n", nombres);
+}
 
 
+int EliminarConectado(ListaConectados *lista, char nombre[20]) {
+	//Devuelve -1 sino esta en la lista
+	int posicion = DamePosicion(lista, nombre);
+	if (posicion == -1)
+		return -1;
+	else {
+		for (int i = posicion; i < lista->numConectados - 1; i++)
+		{
+			lista->conectados[i] = lista->conectados[i+1];
+		}
+		lista->numConectados--;
+		return 0;
+	}
+}
 
 void *AtenderCliente(void *socket) {
     int sock_conn;
@@ -24,8 +103,8 @@ void *AtenderCliente(void *socket) {
     char peticion[512];
     char respuesta[512];
 	int ret;
-
-    MYSQL *conn = mysql_init(NULL);
+	
+	MYSQL *conn = mysql_init(NULL);
     if (!conn) {
         fprintf(stderr, "Error al crear la conexión MySQL\n");
         close(sock_conn);
@@ -72,25 +151,42 @@ void *AtenderCliente(void *socket) {
 				printf ("Codigo: %d, Usuario: %s\n", codigo, usuario);
 			}
 
-        if (codigo ==0) //Peticion de desconexion
+        if (codigo ==0){ //Peticion de desconexion
 				terminar=1;
+				
+				int res = EliminarConectado(&listaConectados, usuario);
+				if (res == 0) {
+					printf("Jugador eliminado de la lista de conectados.\n", usuario);
+				} else {
+					printf("No se ha eliminado el usuario porque no existia en la lista\n", usuario);
+				}    
+		}
         else if (codigo == 1) {// Peticion de login
                 p = strtok( NULL, "/");
 				
 				strcpy (contrasena, p);
 				sprintf(respuesta,"%d",login(conn, usuario,contrasena));
-        } 
+				int res = PonerConectado(&listaConectados, usuario, sock_conn);
+                if (res == 0 && login(conn, usuario,contrasena) == 1) {
+                    printf("Jugador %s añadido a la lista de conectados.\n", usuario);
+                } else {
+                    printf("No se pudo añadir a %s: Lista llena.\n", usuario);
+                }     
+				
+   } 
 		else if (codigo == 2) {//Peticion de registro
-               p = strtok( NULL, "/");
+                p = strtok( NULL, "/");
 				
 				strcpy (contrasena, p);
 				sprintf(respuesta,"%d",register_player(conn, usuario,contrasena));
+				
         } 
 		else if (codigo == 3) //Peticion de mejor tiempo
                 sprintf(respuesta,"%d",MejorTiempo(conn, usuario));
         else if (codigo == 4) //Peticion para consultar el nombre de jugadores que hay en la partida
 				sprintf(respuesta,"%d",ConsultarNumJugadores(conn, usuario));   
-	    else {// Peticion para modificar el perfil (por ahora nombre y edad)
+	    else if (codigo==5)
+			{// Peticion para modificar el perfil (por ahora nombre y edad)
                 int edad;
 				
 				p = strtok( NULL, "/");
@@ -100,6 +196,11 @@ void *AtenderCliente(void *socket) {
 				
 				sprintf(respuesta,"%d",ModificarPerfil(conn, usuario,nombre,edad));
             }
+		else if(codigo==6){
+			char nombres[512];
+			DameConec(&listaConectados, nombres);
+			sprintf(respuesta, "%s", nombres);
+		}
 			
 			printf ("Respuesta: %s\n", respuesta);
 			
@@ -172,7 +273,7 @@ int login(MYSQL *conn, char *id_usuario, char *contrasena){
 	
 	strcpy(consulta, "SELECT nombre FROM jugadores WHERE id_jugador = '");
 	strcat(consulta, id_usuario);
-	strcat(consulta, "' AND contraseña = '");
+	strcat(consulta, "' AND contrase�a = '");
 	strcat(consulta, contrasena);
 	strcat(consulta, "'");
 	
@@ -224,7 +325,7 @@ int register_player(MYSQL *conn, char *nuevo_id, char *contrasena){
 	mysql_free_result(resultado);
 	
 	// Insertar nuevo jugador
-	strcpy(consulta, "INSERT INTO jugadores (id_jugador, contraseña) VALUES ('");
+	strcpy(consulta, "INSERT INTO jugadores (id_jugador, contrase�a) VALUES ('");
 	strcat(consulta, nuevo_id);
 	strcat(consulta, "', '");
 	strcat(consulta, contrasena);
